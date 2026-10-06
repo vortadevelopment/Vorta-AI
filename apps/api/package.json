@@ -1,0 +1,25 @@
+{
+  "name": "@vorta/api",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Backend del asistente VORTA: Hono en Vercel, Claude con tool use, SSE",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "deploy": "vercel deploy --prod"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
+    "@supabase/supabase-js": "^2.117.2",
+    "@vorta/ai-contracts": "workspace:*",
+    "hono": "^4.13.13",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.3",
+    "vercel": "^62.5.0"
+  }
+}
