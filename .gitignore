@@ -1,0 +1,27 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Build
+dist/
+build/
+*.tsbuildinfo
+
+# Entorno — NUNCA commitear secretos (ANTHROPIC_API_KEY, keys de Supabase)
+.env
+.env.*
+!.env.example
+
+# Plataforma / herramientas
+.vercel/
+.turbo/
+coverage/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Editores / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json

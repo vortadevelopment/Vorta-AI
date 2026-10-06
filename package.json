@@ -1,0 +1,20 @@
+{
+  "name": "vorta-ai",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Asistente de IA reutilizable para los ERPs de VORTA",
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "build": "pnpm --filter @vorta/ai-contracts build && pnpm --filter @vorta/ai-assistant build",
+    "dev:api": "pnpm --filter @vorta/api dev",
+    "dev:ui": "pnpm --filter @vorta/ai-assistant dev",
+    "typecheck": "pnpm -r typecheck",
+    "clean": "rm -rf packages/*/dist apps/*/dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
