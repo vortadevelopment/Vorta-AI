@@ -1,0 +1,85 @@
+/*
+ * Tokens de marca del asistente VORTA.
+ *
+ * Todo va prefijado con --vai- para no chocar con las variables del ERP
+ * anfitrión. El asistente se monta siempre dentro de .vai-root, que fija su
+ * propia tipografía y color de fondo: así el chat se ve idéntico en los 8
+ * sistemas aunque cada uno traiga su propio CSS global.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+.vai-root {
+  /* Marca */
+  --vai-ink: #050508;
+  --vai-surface: #ffffff;
+  --vai-blue: #4f8ef7;
+  --vai-purple: #7c5cfc;
+  --vai-gradient: linear-gradient(135deg, var(--vai-blue) 0%, var(--vai-purple) 100%);
+
+  /* Neutrales derivados del negro de marca */
+  --vai-ink-70: rgba(5, 5, 8, 0.7);
+  --vai-ink-50: rgba(5, 5, 8, 0.5);
+  --vai-ink-30: rgba(5, 5, 8, 0.3);
+  --vai-hairline: rgba(5, 5, 8, 0.08);
+  --vai-bubble-user: rgba(5, 5, 8, 0.04);
+  --vai-bubble-assistant: #ffffff;
+
+  /* Tipografía */
+  --vai-font: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --vai-text-xs: 0.75rem;
+  --vai-text-sm: 0.8125rem;
+  --vai-text-base: 0.9375rem;
+  --vai-text-lg: 1.125rem;
+  --vai-leading: 1.55;
+
+  /* Espaciado (escala de 4) */
+  --vai-space-1: 0.25rem;
+  --vai-space-2: 0.5rem;
+  --vai-space-3: 0.75rem;
+  --vai-space-4: 1rem;
+  --vai-space-5: 1.5rem;
+  --vai-space-6: 2rem;
+
+  /* Formas y profundidad */
+  --vai-radius-sm: 8px;
+  --vai-radius-md: 12px;
+  --vai-radius-lg: 16px;
+  --vai-radius-pill: 999px;
+  --vai-shadow-panel: 0 24px 64px rgba(5, 5, 8, 0.12);
+  --vai-shadow-card: 0 1px 2px rgba(5, 5, 8, 0.06);
+
+  /* Capas y animación */
+  --vai-z-panel: 9000;
+  --vai-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --vai-duration: 180ms;
+
+  /* Layout del panel por breakpoint */
+  --vai-panel-width: 420px;
+
+  font-family: var(--vai-font);
+  color: var(--vai-ink);
+  background: var(--vai-surface);
+  font-size: var(--vai-text-base);
+  line-height: var(--vai-leading);
+}
+
+/* Tablet: el panel se ensancha en proporción */
+@media (max-width: 1024px) {
+  .vai-root {
+    --vai-panel-width: min(480px, 70vw);
+  }
+}
+
+/* Celular: el panel ocupa toda la pantalla */
+@media (max-width: 640px) {
+  .vai-root {
+    --vai-panel-width: 100vw;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vai-root {
+    --vai-duration: 0ms;
+  }
+}
