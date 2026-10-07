@@ -9,12 +9,16 @@
   "packageManager": "pnpm@9.15.4",
   "scripts": {
     "build": "pnpm --filter @vorta/ai-contracts build && pnpm --filter @vorta/ai-assistant build",
-    "dev:api": "pnpm --filter @vorta/api dev",
+    "dev:api": "pnpm --filter @vorta/api dev:local",
     "dev:ui": "pnpm --filter @vorta/ai-assistant dev",
-    "typecheck": "pnpm -r typecheck",
-    "clean": "rm -rf packages/*/dist apps/*/dist"
+    "typecheck": "tsc -p tsconfig.scripts.json && pnpm -r typecheck",
+    "clean": "rm -rf packages/*/dist apps/*/dist",
+    "dev:chat": "tsx scripts/dev-chat.ts"
   },
   "devDependencies": {
+    "@supabase/supabase-js": "^2.117.2",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   }
 }

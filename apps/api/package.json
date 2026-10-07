@@ -5,7 +5,8 @@
   "description": "Backend del asistente VORTA: Hono en Vercel, Claude con tool use, SSE",
   "type": "module",
   "scripts": {
-    "dev": "vercel dev",
+    "dev:local": "tsx watch src/server.ts",
+    "dev:vercel": "vercel dev --listen 3000",
     "build": "tsc -p tsconfig.json --noEmit",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "deploy": "vercel deploy --prod"
@@ -18,7 +19,9 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@hono/node-server": "^2.1.3",
     "@types/node": "^22.0.0",
+    "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "vercel": "^62.5.0"
   }
