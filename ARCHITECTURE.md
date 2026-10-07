@@ -193,16 +193,18 @@ El backend **solo** llama funciones `ai_*` en el Supabase de cada sistema. Cada
 RPC es `security invoker` (hereda el `auth.uid()` del llamador) y por tanto
 respeta RLS; devuelve JSON con una forma fija que la API traduce a bloques.
 
-Catálogo inicial previsto (se cierra en la Fase 1, ver `docs/rpc-contract.md`):
+Catálogo, cerrado en la Fase 1 (firmas completas en `docs/rpc-contract.md`):
 
-| RPC | Para qué |
-|---|---|
-| `ai_ventas_periodo` | ventas agregadas por rango y granularidad |
-| `ai_buscar_venta` | una venta por folio, cliente o fecha |
-| `ai_top_clientes` | ranking de clientes por importe |
-| `ai_top_productos` | ranking de productos por importe o volumen |
-| `ai_inventario_estado` | existencias y mínimos |
-| `ai_cuentas_por_cobrar` | saldos y antigüedad |
+| RPC | Para qué | ¿Es tool? |
+|---|---|---|
+| `ai_mis_permisos` | qué funciones `ai_*` puede usar el usuario | no, se llama por petición |
+| `ai_ventas_periodo` | ventas agregadas por rango, cliente y producto | sí |
+| `ai_buscar_venta` | una venta por monto, fecha, cliente, producto o folio | sí |
+| `ai_top_clientes` | ranking de clientes por importe, con su adeudo | sí |
+| `ai_top_productos` | ranking de productos por kg o por importe | sí |
+| `ai_inventario_estado` | existencias por producto y almacén, y mínimos | sí |
+| `ai_cuentas_por_cobrar` | cartera abierta con antigüedad | sí |
+| `ai_resumen_semana` | semana lunes–domingo: ventas, compras, cobranza, CxP, alertas | sí |
 
 Reglas del contrato:
 
@@ -212,17 +214,49 @@ Reglas del contrato:
   tool no se le ofrece al modelo.
 - **Ninguna RPC expone nómina, sueldos ni datos de empleados.**
 
+### Doble filtro de permisos
+
+`ai_mis_permisos` no se le ofrece al modelo: se llama una vez por petición, con
+el JWT del usuario, y su resultado se cruza con `enabledTools` del sistema. **A
+Claude solo se le pasan las tools que ese usuario puede usar.** Que cada RPC
+rechace al no autorizado con `42501` es la red de seguridad, no el mecanismo: si
+la tool no está en el catálogo, el modelo no puede ni intentarlo y no gasta un
+turno para que le digan que no.
+
+Si `ai_mis_permisos` no se puede leer, se **falla cerrado**: no se ofrece ninguna
+tool y el chat responde con error. Ofrecer el catálogo completo "por si acaso"
+sería exactamente el agujero que este diseño existe para tapar.
+
 ---
 
 ## 8. Integración con Claude
 
 - **Modelo: `claude-sonnet-5-5`** (fijo). SDK oficial `@anthropic-ai/sdk`.
-- **Streaming siempre.** `client.beta.messages.toolRunner({ …, stream: true })`
-  conduce el ciclo petición → ejecutar tool → repetir; el handler traduce los
-  eventos del stream a los eventos SSE de la tabla de arriba.
+- **Streaming siempre.** `client.beta.messages.stream()` dentro de un loop
+  propio (`src/claude/run.ts`) conduce el ciclo petición → ejecutar tool →
+  repetir; se iteran los eventos del stream y se traducen a los eventos SSE de
+  la tabla de arriba. **Tope de 8 iteraciones** de tool use por mensaje; en la
+  última se manda `tool_choice: { type: "none" }` para que el modelo cierre con
+  lo que tiene en lugar de pedir una consulta más que no se va a correr.
+- **El loop es propio, no `toolRunner`.** El runner del SDK no deja emitir
+  `tool_start` con su label antes de ejecutar la RPC, ni marcar `is_error: true`
+  en el `tool_result` de un permiso denegado con un mensaje redactado, ni cortar
+  en el tope con una respuesta útil. Las reglas de `stop_reason` hay que
+  aplicarlas a mano de cualquier forma, así que el runner solo ahorraba el
+  `while`.
+- **Fallback de servidor activado.** `betas: ["server-side-fallback-2026-07-01"]`
+  + `fallbacks: "default"`: si un clasificador de seguridad declina la petición,
+  la API la reintenta sola en otro modelo dentro de la misma llamada. Una
+  pregunta sobre ventas o inventario que acabe en `refusal` es casi con certeza
+  un falso positivo, y sin esto el stream se cortaría sin respuesta.
 - **`output_config.effort`:** en Sonnet 5.5 el default es `high` y los niveles
   están recalibrados. Se arranca en `medium` (consultas con tool use) y se baja
-  a `low` para preguntas conversacionales; se mide antes de fijarlo.
+  a `low` para preguntas conversacionales; se mide antes de fijarlo. Hoy está
+  fijo en `medium` para todas las rutas.
+- **`max_tokens: 16000`.** Tope por turno, no objetivo. Una respuesta de chat con
+  una tabla cabe de sobra; si un turno se corta por longitud y venía con
+  `tool_use`, el input pudo truncarse y seguir pareciendo válido, así que ese
+  turno **no** se ejecuta.
 - **Thinking:** adaptativo (el default). En este modelo `thinking: {type:
   "disabled"}` devuelve 400; si alguna ruta necesitara apagarlo, la forma válida
   es `{type: "between_tools"}` con effort `high` o menor.
@@ -258,7 +292,7 @@ export const acm: SystemConfig = {
   slug: 'acm',
   businessName: 'Abastecedora de Carnes Magaña',
   industry: 'Distribución y venta mayorista de carnes',
-  timeZone: 'America/Monterrey',
+  timeZone: 'America/Mexico_City',
   currency: 'MXN',
   supabase: {
     url: process.env['ACM_SUPABASE_URL'] ?? '',
